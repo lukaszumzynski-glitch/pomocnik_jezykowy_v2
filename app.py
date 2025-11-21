@@ -12,7 +12,6 @@ import bcrypt
 # Wczytaj API key z Streamlit Secrets
 api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
-
 HISTORY_FILE = "translation_history.json"
 
 def img_to_bytes(img_path):
@@ -29,7 +28,7 @@ def load_history(username):
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data.get(username, [])
+            return data.get(username, [])
     except (FileNotFoundError, json.JSONDecodeError):
         return []
 
@@ -83,12 +82,12 @@ def main():
     encoded_image = img_to_bytes(img_path)
     if encoded_image:
         header_html = f"""
-        <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="position: relative; height: 100px;">
             <img src="data:image/png;base64,{encoded_image}" width="100" height="100" style="margin-right: 20px;">
             <h1>POMOCNIK JĘZYKOWY PIONIERA</h1>
             <div>
                 Zalogowany: {st.session_state['username']}
-                <button style="margin-left: 10px;" onclick="window.location.reload()">Wyloguj</button>
+                <button style="position: absolute; right: 0; top: 0;" onclick="window.location.reload()">Wyloguj</button>
             </div>
         </div>
         """
@@ -110,25 +109,46 @@ def main():
     st.sidebar.header("Historia tłumaczeń")
     if history:
         for date in sorted(grouped_history.keys(), reverse=True):
-            with st.sidebar.expander(f" {date}"):
+            with st.sidebar.expander(f"📅 {date}"):
                 for entry in grouped_history[date]:
                     time = entry["timestamp"].split()[1]
-                    st.sidebar.write(f" **{time}**")
-                    st.sidebar.write(f" **{entry['source_lang']}:** {entry['original']}")
-                    st.sidebar.write(f" **{entry['target_lang']}:** {entry['translation']}")
+                    st.sidebar.write(f"⏰ **{time}**")
+                    st.sidebar.write(f"📄 **{entry['source_lang']}:** {entry['original']}")
+                    st.sidebar.write(f"🔊 **{entry['target_lang']}:** {entry['translation']}")
                     st.sidebar.divider()
     else:
         st.sidebar.write("Brak historii.")
 
     # Lista języków
     languages = {
-        "polski": "polski", "angielski": "angielski", "francuski": "francuski", "niemiecki": "niemiecki",
-        "hiszpański": "hiszpański", "włoski": "włoski", "chiński": "chiński", "japoński": "japoński",
-        "rosyjski": "rosyjski", "arabski": "arabski", "portugalski": "portugalski", "koreański": "koreański",
-        "holenderski": "holenderski", "szwedzki": "szwedzki", "grecki": "grecki", "czeski": "czeski",
-        "turecki": "turecki", "węgierski": "węgierski", "fiński": "fiński", "indonezyjski": "indonezyjski",
-        "tajski": "tajski", "wietnamski": "wietnamski", "hebrajski": "hebrajski", "perski": "perski",
-        "ukraiński": "ukraiński", "rumuński": "rumuński", "bułgarski": "bułgarski", "słowacki": "słowacki",
+        "polski": "polski",
+        "angielski": "angielski",
+        "francuski": "francuski",
+        "niemiecki": "niemiecki",
+        "hiszpański": "hiszpański",
+        "włoski": "włoski",
+        "chiński": "chiński",
+        "japoński": "japoński",
+        "rosyjski": "rosyjski",
+        "arabski": "arabski",
+        "portugalski": "portugalski",
+        "koreański": "koreański",
+        "holenderski": "holenderski",
+        "szwedzki": "szwedzki",
+        "grecki": "grecki",
+        "czeski": "czeski",
+        "turecki": "turecki",
+        "węgierski": "węgierski",
+        "fiński": "fiński",
+        "indonezyjski": "indonezyjski",
+        "tajski": "tajski",
+        "wietnamski": "wietnamski",
+        "hebrajski": "hebrajski",
+        "perski": "perski",
+        "ukraiński": "ukraiński",
+        "rumuński": "rumuński",
+        "bułgarski": "bułgarski",
+        "słowacki": "słowacki",
         "chorwacki": "chorwacki"
     }
 
@@ -140,19 +160,17 @@ def main():
         target_lang = st.selectbox("Język tłumaczenia:", list(languages.keys()))
 
     # Pole tekstowe
-    text = st.text_area("Twój tekst:", height=150, max_chars=5000, placeholder="Tutaj wpisz lub wklej tekst...", key="input_text")
+    text = st.text_area("Twój tekst:", height=150, max_chars=5000, placeholder="Tutaj wpisz lub wklej tekst...")
 
-    # Przyciski
-    col1, col2 = st.columns(2)
+    # Tłumaczenie
     translation = ""
-    with col1:
-        if st.button("Tłumacz"):
-            if text:
-                if source_lang == target_lang:
-                    st.warning("Język źródłowy i docelowy nie mogą być takie same!")
-                else:
-                    with st.spinner("Trwa tłumaczenie... Proszę czekać."):
-                        translation = translate_text(text, languages[source_lang], languages[target_lang])
+    if st.button("Tłumacz"):
+        if text:
+            if source_lang == target_lang:
+                st.warning("Język źródłowy i docelowy nie mogą być takie same!")
+            else:
+                with st.spinner("Trwa tłumaczenie... Proszę czekać."):
+                    translation = translate_text(text, languages[source_lang], languages[target_lang])
                     # Zapisz do historii
                     history.append({
                         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -162,15 +180,10 @@ def main():
                         "target_lang": target_lang
                     })
                     save_history(username, history)
-            else:
-                st.warning("Pole tekstowe jest puste!")
-    with col2:
-        if st.button("Wyczyść"):
-            st.session_state["input_text"] = ""
-            translation = ""
+        else:
+            st.warning("Pole tekstowe jest puste!")
 
-    # Wynik tłumaczenia
-    st.text_area("Twoje tłumaczenie:", value=translation, height=150, key="output_translation")
+    st.text_area("Twoje tłumaczenie:", value=translation, height=150)
 
     # Liczba znaków
     if text:
