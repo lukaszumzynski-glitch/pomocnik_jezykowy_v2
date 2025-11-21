@@ -82,12 +82,12 @@ def main():
     encoded_image = img_to_bytes(img_path)
     if encoded_image:
         header_html = f"""
-        <div style="position: relative; height: 100px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
             <img src="data:image/png;base64,{encoded_image}" width="100" height="100" style="margin-right: 20px;">
             <h1>POMOCNIK JĘZYKOWY PIONIERA</h1>
             <div>
                 Zalogowany: {st.session_state['username']}
-                <button style="position: absolute; right: 0; top: 0;" onclick="window.location.reload()">Wyloguj</button>
+                <button style="margin-left: 10px;" onclick="window.location.reload()">Wyloguj</button>
             </div>
         </div>
         """
@@ -109,12 +109,12 @@ def main():
     st.sidebar.header("Historia tłumaczeń")
     if history:
         for date in sorted(grouped_history.keys(), reverse=True):
-            with st.sidebar.expander(f"📅 {date}"):
+            with st.sidebar.expander(f" {date}"):
                 for entry in grouped_history[date]:
                     time = entry["timestamp"].split()[1]
-                    st.sidebar.write(f"⏰ **{time}**")
-                    st.sidebar.write(f"📄 **{entry['source_lang']}:** {entry['original']}")
-                    st.sidebar.write(f"🔊 **{entry['target_lang']}:** {entry['translation']}")
+                    st.sidebar.write(f" **{time}**")
+                    st.sidebar.write(f" **{entry['source_lang']}:** {entry['original']}")
+                    st.sidebar.write(f" **{entry['target_lang']}:** {entry['translation']}")
                     st.sidebar.divider()
     else:
         st.sidebar.write("Brak historii.")
