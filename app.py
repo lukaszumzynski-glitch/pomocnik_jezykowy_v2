@@ -12,6 +12,7 @@ import bcrypt
 # Wczytaj API key z Streamlit Secrets
 api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=api_key)
+
 HISTORY_FILE = "translation_history.json"
 
 def img_to_bytes(img_path):
@@ -28,7 +29,7 @@ def load_history(username):
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return data.get(username, [])
+        return data.get(username, [])
     except (FileNotFoundError, json.JSONDecodeError):
         return []
 
@@ -121,34 +122,13 @@ def main():
 
     # Lista języków
     languages = {
-        "polski": "polski",
-        "angielski": "angielski",
-        "francuski": "francuski",
-        "niemiecki": "niemiecki",
-        "hiszpański": "hiszpański",
-        "włoski": "włoski",
-        "chiński": "chiński",
-        "japoński": "japoński",
-        "rosyjski": "rosyjski",
-        "arabski": "arabski",
-        "portugalski": "portugalski",
-        "koreański": "koreański",
-        "holenderski": "holenderski",
-        "szwedzki": "szwedzki",
-        "grecki": "grecki",
-        "czeski": "czeski",
-        "turecki": "turecki",
-        "węgierski": "węgierski",
-        "fiński": "fiński",
-        "indonezyjski": "indonezyjski",
-        "tajski": "tajski",
-        "wietnamski": "wietnamski",
-        "hebrajski": "hebrajski",
-        "perski": "perski",
-        "ukraiński": "ukraiński",
-        "rumuński": "rumuński",
-        "bułgarski": "bułgarski",
-        "słowacki": "słowacki",
+        "polski": "polski", "angielski": "angielski", "francuski": "francuski", "niemiecki": "niemiecki",
+        "hiszpański": "hiszpański", "włoski": "włoski", "chiński": "chiński", "japoński": "japoński",
+        "rosyjski": "rosyjski", "arabski": "arabski", "portugalski": "portugalski", "koreański": "koreański",
+        "holenderski": "holenderski", "szwedzki": "szwedzki", "grecki": "grecki", "czeski": "czeski",
+        "turecki": "turecki", "węgierski": "węgierski", "fiński": "fiński", "indonezyjski": "indonezyjski",
+        "tajski": "tajski", "wietnamski": "wietnamski", "hebrajski": "hebrajski", "perski": "perski",
+        "ukraiński": "ukraiński", "rumuński": "rumuński", "bułgarski": "bułgarski", "słowacki": "słowacki",
         "chorwacki": "chorwacki"
     }
 
@@ -160,17 +140,19 @@ def main():
         target_lang = st.selectbox("Język tłumaczenia:", list(languages.keys()))
 
     # Pole tekstowe
-    text = st.text_area("Twój tekst:", height=150, max_chars=5000, placeholder="Tutaj wpisz lub wklej tekst...")
+    text = st.text_area("Twój tekst:", height=150, max_chars=5000, placeholder="Tutaj wpisz lub wklej tekst...", key="input_text")
 
-    # Tłumaczenie
+    # Przyciski
+    col1, col2 = st.columns(2)
     translation = ""
-    if st.button("Tłumacz"):
-        if text:
-            if source_lang == target_lang:
-                st.warning("Język źródłowy i docelowy nie mogą być takie same!")
-            else:
-                with st.spinner("Trwa tłumaczenie... Proszę czekać."):
-                    translation = translate_text(text, languages[source_lang], languages[target_lang])
+    with col1:
+        if st.button("Tłumacz"):
+            if text:
+                if source_lang == target_lang:
+                    st.warning("Język źródłowy i docelowy nie mogą być takie same!")
+                else:
+                    with st.spinner("Trwa tłumaczenie... Proszę czekać."):
+                        translation = translate_text(text, languages[source_lang], languages[target_lang])
                     # Zapisz do historii
                     history.append({
                         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -180,10 +162,15 @@ def main():
                         "target_lang": target_lang
                     })
                     save_history(username, history)
-        else:
-            st.warning("Pole tekstowe jest puste!")
+            else:
+                st.warning("Pole tekstowe jest puste!")
+    with col2:
+        if st.button("Wyczyść"):
+            st.session_state["input_text"] = ""
+            translation = ""
 
-    st.text_area("Twoje tłumaczenie:", value=translation, height=150)
+    # Wynik tłumaczenia
+    st.text_area("Twoje tłumaczenie:", value=translation, height=150, key="output_translation")
 
     # Liczba znaków
     if text:
